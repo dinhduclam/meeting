@@ -1,0 +1,9 @@
+services:
+  web:
+    image: node:18-slim
+    volumes:
+      - ./web:/app/web
+    ports:
+      - "3000:3000"
+    working_dir: /app/web
+    command: ["npm", "run", "dev", "--"]
