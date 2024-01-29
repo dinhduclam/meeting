@@ -7,3 +7,11 @@ services:
       - "3000:3000"
     working_dir: /app/web
     command: ["npm", "run", "dev", "--"]
+  server:
+    image: node:18-slim
+    volumes:
+      - ./server:/app/server
+    ports:
+      - "5000:5000"
+    working_dir: /app/server
+    command: ["npm", "run", "dev", "--"]
