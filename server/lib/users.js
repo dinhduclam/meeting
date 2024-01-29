@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 const bluebird = require('bluebird');
-const haiku = require('./haiku');
+const genid = require('./genid');
 
 const MAX_TRIES = 10;
 
@@ -12,7 +12,7 @@ async function randomID(counter = 0) {
     return null;
   }
   await bluebird.delay(10);
-  const id = haiku();
+  const id = genid();
   return id in users ? randomID(counter + 1) : id;
 }
 

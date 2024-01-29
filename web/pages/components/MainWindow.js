@@ -10,7 +10,7 @@ function useClientID() {
   useEffect(() => {
     socket
       .on('init', ({ id }) => {
-        document.title = `${id} - VideoCall`;
+        document.title = `Meeting`;
         setClientID(id);
       });
   }, []);
@@ -35,7 +35,7 @@ function MainWindow({ startCall }) {
     <div className="container main-window">
       <div>
         <h3>
-          Hi, your ID is
+          Your ID is
           <input
             type="text"
             className="txt-clientId"

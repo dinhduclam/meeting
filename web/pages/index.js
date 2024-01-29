@@ -24,7 +24,6 @@ class App extends Component {
 
   componentDidMount() {
     initSocket();
-    console.log(socket)
     socket
       .on('request', ({ from: callFrom }) => {
         this.setState({ callModal: 'active', callFrom });
