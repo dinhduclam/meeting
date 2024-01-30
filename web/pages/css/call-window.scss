@@ -29,27 +29,41 @@
 		z-index: -1;
 		@include transition(opacity 0.5s);
 		
-		
 		&:hover {
 			opacity: 1;
 		}
 	}
+
+	#video-area {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+		gap: 20px;
+		padding: 20px;
+	}
+	
+	.video {
+		text-align: center;
+
+		video {
+			width: 100%;
+		}
+	}
+
+	#localVideo {
+		position: absolute;
+		bottom: 15px;
+		right: 15px;
+		width: 20%;
+	}
 	
 	video {
-		position: absolute;
+		border: 2px #0d6efd solid;
+		border-radius: 20px;
 	}
-	
-	#localVideo {
-		bottom: 0;
-		right: 0;
-		width: 20%;
-		height: 20%;
-	}
-	
-	#peerVideo {
-		width: 100%;
-		height: 100%;
-	}
+	// .peerVideo {
+	// 	width: 50%;
+	// 	height: 100%;
+	// }
 }
 
 @include keyframes(in-fadeout) {

@@ -2,17 +2,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
-import { faPhone, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faPhone, faVideo, faMicrophone } from '@fortawesome/free-solid-svg-icons';
 import ActionButton from './ActionButton';
 
-function CallWindow({ peerSrc, localSrc, config, mediaDevice, status, endCall }) {
-  const peerVideo = useRef(null);
+function CallWindow({ peerSrcs, localSrc, config, mediaDevice, status, endCall }) {
+  const peerVideo = [useRef(null),useRef(null),useRef(null),useRef(null),useRef(null),useRef(null),useRef(null)];
   const localVideo = useRef(null);
   const [video, setVideo] = useState(config.video);
   const [audio, setAudio] = useState(config.audio);
 
+  // console.log("ddasddd", peerSrcs.length);
+  // for (var i=0; i<Object.keys(peerSrcs).length; i++){
+  //   peerVideo.push(useRef(null));
+  // }
+
   useEffect(() => {
-    if (peerVideo.current && peerSrc) peerVideo.current.srcObject = peerSrc;
+    var idx = 0;
+    for (const key in peerSrcs){
+      peerVideo[idx++].current.srcObject = peerSrcs[key];
+    }
     if (localVideo.current && localSrc) localVideo.current.srcObject = localSrc;
   });
 
@@ -39,8 +47,19 @@ function CallWindow({ peerSrc, localSrc, config, mediaDevice, status, endCall })
 
   return (
     <div className={classnames('call-window', status)}>
-      <video id="peerVideo" ref={peerVideo} autoPlay />
-      <video id="localVideo" ref={localVideo} autoPlay muted />
+      <div id='video-area'>
+        {
+          Object.keys(peerSrcs).map((key, idx) => (
+            <div className="video peer">
+              <video key={key} className="peerVideo" ref={peerVideo[idx]} autoPlay />
+              <label>{key}</label>
+            </div>
+          ))
+        }
+      </div>
+      <div className="local-video">
+        <video id="localVideo" ref={localVideo} autoPlay muted />
+      </div>
       <div className="video-control">
         <ActionButton
           key="btnVideo"
@@ -50,14 +69,14 @@ function CallWindow({ peerSrc, localSrc, config, mediaDevice, status, endCall })
         />
         <ActionButton
           key="btnAudio"
-          icon={faPhone}
+          icon={faMicrophone}
           disabled={!audio}
           onClick={() => toggleMediaDevice('Audio')}
         />
         <ActionButton
           className="hangup"
           icon={faPhone}
-          onClick={() => endCall(true)}
+          onClick={() => endCall()}
         />
       </div>
     </div>
@@ -67,7 +86,7 @@ function CallWindow({ peerSrc, localSrc, config, mediaDevice, status, endCall })
 CallWindow.propTypes = {
   status: PropTypes.string.isRequired,
   localSrc: PropTypes.object, // eslint-disable-line
-  peerSrc: PropTypes.object, // eslint-disable-line
+  peerSrcs: PropTypes.object, // eslint-disable-line
   config: PropTypes.shape({
     audio: PropTypes.bool.isRequired,
     video: PropTypes.bool.isRequired

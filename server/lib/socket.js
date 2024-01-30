@@ -1,31 +1,48 @@
 const io = require('socket.io');
 const users = require('./users');
+const rooms = require('./rooms');
 
 /**
  * Initialize when a connection is made
  * @param {SocketIO.Socket} socket
  */
 function initSocket(socket) {
-  let id;
+  let userId;
+  let roomId;
   socket
     .on('init', async () => {
-      id = await users.create(socket);
-      if (id) {
-        socket.emit('init', { id });
+      userId = await users.create(socket);
+      if (userId) {
+        socket.emit('init', { userId });
       } else {
         socket.emit('error', { message: 'Failed to generating user id' });
       }
     })
-    .on('request', (data) => {
-      const receiver = users.get(data.to);
-      if (receiver) {
-        receiver.emit('request', { from: id });
+    .on('join', (data) => {
+      console.log("join", data);
+      roomId = rooms.join(data.roomId, userId);
+      if (roomId) {
+        members = rooms.getMembers(roomId);
+        console.log("member", members);
+        socket.emit('joined', { members: JSON.stringify(members) });
+      } else {
+        socket.emit('error', { message: 'Failed to join room' });
+      }
+    })
+    .on('out', (data) => {
+      rooms.out(roomId, userId);
+      members = rooms.getMembers(roomId);
+      for (member of members){
+        const receiver = users.get(member);
+        if (receiver) {
+          receiver.emit('outed', { roomId, userId });
+        }
       }
     })
     .on('call', (data) => {
       const receiver = users.get(data.to);
       if (receiver) {
-        receiver.emit('call', { ...data, from: id });
+        receiver.emit('call', { ...data, from: userId });
       } else {
         socket.emit('failed');
       }
@@ -37,8 +54,8 @@ function initSocket(socket) {
       }
     })
     .on('disconnect', () => {
-      users.remove(id);
-      console.log(id, 'disconnected');
+      users.remove(userId);
+      console.log(userId, 'disconnected');
     });
 }
 

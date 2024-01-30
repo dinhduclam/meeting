@@ -10,34 +10,31 @@ class PeerConnection extends Emitter {
      * @param {String} friendID - ID of the friend you want to call.
      */
   constructor(friendID) {
+    initSocket();
     super();
     this.pc = new RTCPeerConnection(PC_CONFIG);
-    this.pc.onicecandidate = (event) => socket.emit('call', {
-      to: this.friendID,
-      candidate: event.candidate
-    });
+    this.pc.onicecandidate = (event) => {
+      socket.emit('call', {
+        to: this.friendID,
+        candidate: event.candidate
+      });
+    }
     this.pc.ontrack = (event) => this.emit('peerStream', event.streams[0]);
 
     this.mediaDevice = new MediaDevice();
     this.friendID = friendID;
-    initSocket();
   }
 
   /**
    * Starting the call
-   * @param {Boolean} isCaller
+   * @param {MediaStream} stream
    */
-  start(isCaller) {
-    this.mediaDevice
-      .on('stream', (stream) => {
-        stream.getTracks().forEach((track) => {
-          this.pc.addTrack(track, stream);
-        });
-        this.emit('localStream', stream);
-        if (isCaller) socket.emit('request', { to: this.friendID });
-        else this.createOffer();
-      })
-      .start();
+  setLocalStream(stream) {
+    if (!stream)
+      return this;
+    stream.getTracks().forEach((track) => {
+      this.pc.addTrack(track, stream);
+    });
 
     return this;
   }
@@ -46,10 +43,7 @@ class PeerConnection extends Emitter {
    * Stop the call
    * @param {Boolean} isStarter
    */
-  stop(isStarter) {
-    if (isStarter) {
-      socket.emit('end', { to: this.friendID });
-    }
+  stop() {
     this.mediaDevice.stop();
     this.pc.close();
     this.pc = null;

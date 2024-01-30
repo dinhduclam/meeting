@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { faPhone, faVideo } from '@fortawesome/free-solid-svg-icons';
-import ActionButton from './ActionButton';
 import { socket } from '../communication';
 
 function useClientID() {
@@ -9,32 +7,31 @@ function useClientID() {
 
   useEffect(() => {
     socket
-      .on('init', ({ id }) => {
+      .on('init', ({ userId }) => {
         document.title = `Meeting`;
-        setClientID(id);
+        setClientID(userId);
       });
   }, []);
 
   return clientID;
 }
 
-function MainWindow({ startCall }) {
+function MainWindow({ joinRoom }) {
   const clientID = useClientID();
-  const [friendID, setFriendID] = useState(null);
+  const [roomId, setRoomId] = useState('');
 
   /**
-   * Start the call with or without video
-   * @param {Boolean} video
+   * Join a room
    */
-  const callWithVideo = (video) => {
-    const config = { audio: true, video };
-    return () => friendID && startCall(true, friendID, config);
+  const joinRoomHandler = () => {
+    const config = { audio: true, video: true };
+    return () => roomId && joinRoom(roomId, config);
   };
 
   return (
-    <div className="container main-window">
+    <div className="main-window">
       <div>
-        <h3>
+        <h4>
           Your ID is
           <input
             type="text"
@@ -42,20 +39,20 @@ function MainWindow({ startCall }) {
             defaultValue={clientID}
             readOnly
           />
-        </h3>
-        <h4>Get started by calling a friend below</h4>
+        </h4>
       </div>
+      <br/>
       <div>
+        <h4>Join a room by typing the room ID below:</h4>
         <input
           type="text"
           className="txt-clientId"
           spellCheck={false}
-          placeholder="Your friend ID"
-          onChange={(event) => setFriendID(event.target.value)}
+          placeholder="Room ID"
+          onChange={(event) => setRoomId(event.target.value)}
         />
         <div>
-          <ActionButton icon={faVideo} onClick={callWithVideo(true)} />
-          <ActionButton icon={faPhone} onClick={callWithVideo(false)} />
+          <div className="btn-join" onClick={joinRoomHandler()}>Join now</div>
         </div>
       </div>
     </div>
@@ -63,7 +60,7 @@ function MainWindow({ startCall }) {
 }
 
 MainWindow.propTypes = {
-  startCall: PropTypes.func.isRequired
+  joinRoom: PropTypes.func.isRequired
 };
 
 export default MainWindow;

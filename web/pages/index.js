@@ -1,96 +1,121 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
-import { socket, initSocket, PeerConnection } from './communication';
+import { socket, initSocket, PeerConnection, MediaDevice } from './communication';
 import MainWindow from './components/MainWindow';
 import CallWindow from './components/CallWindow';
-import CallModal from './components/CallModal';
 
 class App extends Component {
   constructor() {
     super();
     this.state = {
       callWindow: '',
-      callModal: '',
-      callFrom: '',
       localSrc: null,
-      peerSrc: null
+      peerSrcs: {}
     };
     this.pc = {};
+    this.roomId = null;
+    this.roomMembers = [];
     this.config = null;
-    this.startCallHandler = this.startCall.bind(this);
+    this.userId = null;
+    this.mediaDevice = new MediaDevice();
+    this.joinRoomHandler = this.joinRoom.bind(this);
     this.endCallHandler = this.endCall.bind(this);
-    this.rejectCallHandler = this.rejectCall.bind(this);
   }
 
   componentDidMount() {
     initSocket();
+
+    this.mediaDevice
+      .on('stream', (stream) => {
+        this.setState({localSrc: stream});
+      })
+      .start();
+
     socket
-      .on('request', ({ from: callFrom }) => {
-        this.setState({ callModal: 'active', callFrom });
+      .on('init', ({ userId }) => {
+        this.userId = userId;
       })
       .on('call', (data) => {
+        if (!this.pc[data.from]){
+          const peer = new PeerConnection(data.from)
+            .on('peerStream', (src) => {
+              this.state.peerSrcs[data.from] = src;
+              this.setState({ peerSrcs: this.state.peerSrcs })
+            })
+            .setLocalStream(this.state.localSrc);
+          console.log(peer)
+          this.pc[data.from] = peer;
+        }
         if (data.sdp) {
-          this.pc.setRemoteDescription(data.sdp);
-          if (data.sdp.type === 'offer') this.pc.createAnswer();
-        } else this.pc.addIceCandidate(data.candidate);
+          this.pc[data.from].setRemoteDescription(data.sdp);
+          if (data.sdp.type === 'offer') this.pc[data.from].createAnswer();
+        } else this.pc[data.from].addIceCandidate(data.candidate);
       })
-      .on('end', this.endCall.bind(this, false))
+      .on('joined', (data) => {
+        this.roomMembers = JSON.parse(data.members ?? "[]");
+        this.callAllMember();
+      })
+      .on('outed', (data) => {
+        console.log(`${data.userId} out room ${data.roomId}`)
+        delete this.state.peerSrcs[data.userId];
+        delete this.pc[data.userId];
+        this.setState({ peerSrcs: this.state.peerSrcs })
+      })
       .emit('init');
   }
 
-  startCall(isCaller, friendID, config) {
+  joinRoom(roomId, config) {
+    socket.emit('join', {roomId});
+    this.setState({ callWindow: 'active' });
     this.config = config;
-    this.pc = new PeerConnection(friendID)
-      .on('localStream', (src) => {
-        const newState = { callWindow: 'active', localSrc: src };
-        if (!isCaller) newState.callModal = '';
-        this.setState(newState);
-      })
-      .on('peerStream', (src) => this.setState({ peerSrc: src }))
-      .start(isCaller);
   }
 
-  rejectCall() {
-    const { callFrom } = this.state;
-    socket.emit('end', { to: callFrom });
-    this.setState({ callModal: '' });
+  callAllMember() {
+    console.log("room", this.roomMembers)
+    for (const member of this.roomMembers){
+      if (member == this.userId)
+        continue;
+      const peer = new PeerConnection(member)
+        .on('peerStream', (src) => {
+          this.state.peerSrcs[member] = src;
+          this.setState({ peerSrcs: this.state.peerSrcs })
+        })
+        .setLocalStream(this.state.localSrc)
+        .createOffer();
+      console.log(peer)
+      this.pc[member] = peer;
+    }
   }
 
-  endCall(isStarter) {
-    if (_.isFunction(this.pc.stop)) {
-      this.pc.stop(isStarter);
+  endCall() {
+    for (const peer in this.pc){
+      this.pc[peer].stop();
     }
     this.pc = {};
-    this.config = null;
     this.setState({
       callWindow: '',
-      callModal: '',
-      localSrc: null,
-      peerSrc: null
+      peerSrcs: {}
     });
+    socket.emit('out');
   }
 
   render() {
-    const { callFrom, callModal, callWindow, localSrc, peerSrc } = this.state;
+    const { callWindow, localSrc, peerSrcs } = this.state;
     return (
       <div>
-        <MainWindow startCall={this.startCallHandler} />
-        {!_.isEmpty(this.config) && (
+        {_.isEmpty(this.state.callWindow) && (
+          <MainWindow joinRoom={this.joinRoomHandler} />
+        )}
+        {!_.isEmpty(this.state.callWindow) && (
           <CallWindow
             status={callWindow}
             localSrc={localSrc}
-            peerSrc={peerSrc}
+            peerSrcs={peerSrcs}
             config={this.config}
-            mediaDevice={this.pc.mediaDevice}
+            mediaDevice={this.mediaDevice}
             endCall={this.endCallHandler}
           />
-        ) }
-        <CallModal
-          status={callModal}
-          startCall={this.startCallHandler}
-          rejectCall={this.rejectCallHandler}
-          callFrom={callFrom}
-        />
+        )}
       </div>
     );
   }
