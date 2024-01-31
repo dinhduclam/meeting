@@ -1,6 +1,6 @@
 services:
   web:
-    image: node:18-slim
+    build: web
     volumes:
       - ./web:/app/web
     ports:
@@ -8,7 +8,7 @@ services:
     working_dir: /app/web
     command: ["npm", "run", "dev", "--"]
   server:
-    image: node:18-slim
+    build: server
     volumes:
       - ./server:/app/server
     ports:
