@@ -19,11 +19,9 @@ function initSocket(socket) {
       }
     })
     .on('join', (data) => {
-      console.log("join", data);
       roomId = rooms.join(data.roomId, userId);
       if (roomId) {
         members = rooms.getMembers(roomId);
-        console.log("member", members);
         socket.emit('joined', { members: JSON.stringify(members) });
       } else {
         socket.emit('error', { message: 'Failed to join room' });

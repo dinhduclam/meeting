@@ -8,7 +8,6 @@ exports.join = (id, userId) => {
     if (!rooms[id])
         rooms[id] = [];
     rooms[id].push(userId);
-    console.log(rooms[id]);
     return id;
 };
 

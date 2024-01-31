@@ -43,7 +43,6 @@ class App extends Component {
               this.setState({ peerSrcs: this.state.peerSrcs })
             })
             .setLocalStream(this.state.localSrc);
-          console.log(peer)
           this.pc[data.from] = peer;
         }
         if (data.sdp) {
@@ -56,7 +55,6 @@ class App extends Component {
         this.callAllMember();
       })
       .on('outed', (data) => {
-        console.log(`${data.userId} out room ${data.roomId}`)
         delete this.state.peerSrcs[data.userId];
         delete this.pc[data.userId];
         this.setState({ peerSrcs: this.state.peerSrcs })
@@ -71,7 +69,6 @@ class App extends Component {
   }
 
   callAllMember() {
-    console.log("room", this.roomMembers)
     for (const member of this.roomMembers){
       if (member == this.userId)
         continue;
@@ -82,7 +79,6 @@ class App extends Component {
         })
         .setLocalStream(this.state.localSrc)
         .createOffer();
-      console.log(peer)
       this.pc[member] = peer;
     }
   }

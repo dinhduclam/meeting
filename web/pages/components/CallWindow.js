@@ -11,11 +11,6 @@ function CallWindow({ peerSrcs, localSrc, config, mediaDevice, status, endCall }
   const [video, setVideo] = useState(config.video);
   const [audio, setAudio] = useState(config.audio);
 
-  // console.log("ddasddd", peerSrcs.length);
-  // for (var i=0; i<Object.keys(peerSrcs).length; i++){
-  //   peerVideo.push(useRef(null));
-  // }
-
   useEffect(() => {
     var idx = 0;
     for (const key in peerSrcs){
