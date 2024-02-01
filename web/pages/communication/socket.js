@@ -5,7 +5,7 @@ export const initSocket = () => {
     if (socket)
         return socket;
 
-    socket = io(`https://meeting-rtc-7dec006dda62.herokuapp.com`, {
+    socket = io(`https://meeting-socket-0b45b1849ed7.herokuapp.com`, {
         path: "/bridge/",
         transports: ['websocket']
     });

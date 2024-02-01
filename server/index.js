@@ -15,6 +15,6 @@ io.on("connection", (socket) => {
   initSocket(socket)
 });
 
-httpServer.listen(port, () => {
+httpServer.listen(process.env.PORT || port, () => {
   console.log('Server is listening at :', port);
 });
