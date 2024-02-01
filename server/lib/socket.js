@@ -1,4 +1,3 @@
-const io = require('socket.io');
 const users = require('./users');
 const rooms = require('./rooms');
 
@@ -6,7 +5,7 @@ const rooms = require('./rooms');
  * Initialize when a connection is made
  * @param {SocketIO.Socket} socket
  */
-function initSocket(socket) {
+module.exports = function initSocket(socket) {
   let userId;
   let roomId;
   socket
@@ -56,9 +55,3 @@ function initSocket(socket) {
       console.log(userId, 'disconnected');
     });
 }
-
-module.exports = (server) => {
-  io({ path: '/bridge', serveClient: false })
-    .listen(server, { log: true })
-    .on('connection', initSocket);
-};
