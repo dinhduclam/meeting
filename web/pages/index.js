@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
-import { socket, initSocket, PeerConnection, MediaDevice } from './communication';
-import MainWindow from './components/MainWindow';
-import CallWindow from './components/CallWindow';
+import { socket, initSocket, PeerConnection, MediaDevice } from '../communication';
+import MainWindow from '../components/MainWindow';
+import CallWindow from '../components/CallWindow';
 
 class App extends Component {
   constructor() {
